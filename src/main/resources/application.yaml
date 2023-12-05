@@ -1,0 +1,19 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://localhost:${HOST}/${DATABASE_NAME}?currentSchema=${DATABASE_SCHEMA}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
+      continue-on-error: false
+#      data-location: classpath:demo_data.sql
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    access: ${JWT_ACCESS}
+    refresh: ${JWT_REFRESH}
