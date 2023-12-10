@@ -19,9 +19,8 @@ import ru.Bogachev.task_list.service.props.JwtProperties;
 import ru.Bogachev.task_list.web.dto.auth.JwtResponse;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.security.Key;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,22 +30,22 @@ public class JwtTokenProvider {
     private final JwtProperties jwtProperties;
     private final UserDetailsService userDetailsService;
     private final UserService userService;
-    private SecretKey key;
+    private Key key;
 
     @PostConstruct
-    public void init () {
+    public void init() {
         this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
     }
 
     public String createAccessToken (Long userId, String username, Set<Role> roles) {
-        Claims claims = (Claims) Jwts.claims().subject(username);
+        Map<String, Object> claims = new HashMap<>();
         claims.put("id", userId);
         claims.put("roles", resolveRoles(roles));
         Date now = new Date();
         Date validity = new Date(now.getTime() + jwtProperties.getAccess());
         return Jwts.builder()
+                .subject(username)
                 .claims(claims)
-                .issuedAt(now)
                 .expiration(validity)
                 .signWith(key)
                 .compact();
@@ -59,13 +58,13 @@ public class JwtTokenProvider {
     }
 
     public String createRefreshToken (Long userId, String username) {
-        Claims claims = (Claims) Jwts.claims().subject(username);
+        Map<String, Object> claims = new HashMap<>();
         claims.put("id", userId);
         Date now = new Date();
         Date validity = new Date(now.getTime() + jwtProperties.getRefresh());
         return Jwts.builder()
+                .subject(username)
                 .claims(claims)
-                .issuedAt(now)
                 .expiration(validity)
                 .signWith(key)
                 .compact();
@@ -77,7 +76,7 @@ public class JwtTokenProvider {
             throw new AccessDeniedException();
         }
         Long userId = Long.valueOf(getId(refreshToken));
-        User user = userService.userGetById(userId);
+        User user = userService.getById(userId);
         jwtResponse.setId(userId);
         jwtResponse.setUsername(user.getUsername());
         jwtResponse.setAccessToken(createAccessToken(userId, user.getUsername(), user.getRoles()));
@@ -86,9 +85,8 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String token) {
-        Jws<Claims> claims = Jwts
-                    .parser()
-                    .verifyWith(key)
+        Jws<Claims> claims = Jwts                   .parser()
+                    .verifyWith((SecretKey) key)
                     .build()
                     .parseSignedClaims(token);
         return !claims.getPayload().getExpiration().before(new Date());
@@ -97,7 +95,7 @@ public class JwtTokenProvider {
     private String getId (String token) {
         return Jwts
                 .parser()
-                .verifyWith(key)
+                .verifyWith((SecretKey) key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -107,7 +105,7 @@ public class JwtTokenProvider {
     private String getUsername (String token) {
         return Jwts
                 .parser()
-                .verifyWith(key)
+                .verifyWith((SecretKey) key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()

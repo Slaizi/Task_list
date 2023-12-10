@@ -6,7 +6,7 @@ import ru.Bogachev.task_list.domain.user.User;
 import java.util.Optional;
 
 public interface UserRepository {
-    Optional<User> findById();
+    Optional<User> findById(Long id);
     Optional<User> findByUsername(String username);
     void update (User user);
     void create (User user);

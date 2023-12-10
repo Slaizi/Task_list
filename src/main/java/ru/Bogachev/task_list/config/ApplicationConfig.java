@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,7 +21,7 @@ import ru.Bogachev.task_list.web.security.JwtTokenProvider;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor = @__(@Lazy))
 public class ApplicationConfig {
 
     private final JwtTokenProvider tokenProvider;
@@ -40,21 +41,22 @@ public class ApplicationConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> {})
+                .cors(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(
                         (request, response, authException) -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.getWriter().write("Unauthorized.");
-                        }))
-                .exceptionHandling(exception -> exception.accessDeniedHandler(
-                        (request, response, accessDeniedException) -> {
-                            response.setStatus(HttpStatus.FORBIDDEN.value());
-                            response.getWriter().write("Unauthorized.");
-                        }))
+                        })
+                        .accessDeniedHandler(
+                                (request, response, accessDeniedException) -> {
+                                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                                    response.getWriter().write("Unauthorized.");
+                                }))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**")
+                        .permitAll()
                         .anyRequest().authenticated()
                 )
                 .anonymous(AbstractHttpConfigurer::disable)
