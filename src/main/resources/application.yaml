@@ -9,11 +9,17 @@ spring:
     driver-class-name: org.postgresql.Driver
   sql:
     init:
-      mode: always
+      mode: never
       continue-on-error: false
 #      data-location: classpath:demo_data.sql
+  liquibase:
+    change-log: classpath:liquibase/db.changelog.yaml
+    enabled: true
+    default-schema: tasklist
 security:
   jwt:
     secret: ${JWT_SECRET}
     access: ${JWT_ACCESS}
     refresh: ${JWT_REFRESH}
+springdoc:
+  override-with-generic-response: false
