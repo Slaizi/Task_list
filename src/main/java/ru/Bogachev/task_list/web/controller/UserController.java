@@ -3,6 +3,7 @@ package ru.Bogachev.task_list.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.Bogachev.task_list.domain.task.Task;
@@ -33,6 +34,7 @@ public class UserController {
 
     @PutMapping
     @Operation(summary = "Update user")
+    @PreAuthorize("@customSecurityExpression.canAccessUser(#dto.id)")
     public UserDto update (@Validated(OnUpdate.class) @RequestBody UserDto dto) {
         User user = userMapper.toEntity(dto);
         User updateUser = userService.update(user);
@@ -41,6 +43,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get UserDto by id")
+    @PreAuthorize("@customSecurityExpression.canAccessUser(#id)")
     public UserDto getById (@PathVariable Long id) {
         User user = userService.getById(id);
         return userMapper.toDto(user);
@@ -48,12 +51,14 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete User by id")
+    @PreAuthorize("@customSecurityExpression.canAccessUser(#id)")
     public void deleteById (@PathVariable Long id) {
         userService.delete(id);
     }
 
     @GetMapping("/{id}/tasks")
     @Operation(summary = "Get all User tasks")
+    @PreAuthorize("@customSecurityExpression.canAccessUserForTasks(#id)")
     public List<TaskDto> getTasksByUserId (@PathVariable Long id) {
         List<Task> tasks = taskService.getAllByUserId(id);
         return taskMapper.toDto(tasks);
@@ -61,6 +66,7 @@ public class UserController {
 
     @PostMapping("/{id}/tasks")
     @Operation(summary = "Add task to User")
+    @PreAuthorize("@customSecurityExpression.canAccessUserForTasks(#id)")
     public TaskDto createTask (@PathVariable Long id,
                                @Validated(OnCreate.class) @RequestBody TaskDto dto) {
         Task task = taskMapper.toEntity(dto);
