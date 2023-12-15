@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+    container_name: tasklist
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:${HOST}/${DATABASE_NAME}?currentSchema=${DATABASE_SCHEMA}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - '8080:8080'
+  db:
+    image: postgres:15.1-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    volumes:
+      - ./src/main/resources/db-init:/docker-entrypoint-initdb.d
+
