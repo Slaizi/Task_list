@@ -20,6 +20,8 @@ import ru.Bogachev.task_list.web.dto.auth.JwtResponse;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,12 +43,12 @@ public class JwtTokenProvider {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userId);
         claims.put("roles", resolveRoles(roles));
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + jwtProperties.getAccess());
+        Instant validity = Instant.now()
+                .plus(jwtProperties.getAccess(), ChronoUnit.HOURS);
         return Jwts.builder()
                 .subject(username)
                 .claims(claims)
-                .expiration(validity)
+                .expiration(Date.from(validity))
                 .signWith(key)
                 .compact();
     }
@@ -60,12 +62,12 @@ public class JwtTokenProvider {
     public String createRefreshToken (Long userId, String username) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userId);
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + jwtProperties.getRefresh());
+        Instant validity = Instant.now()
+                .plus(jwtProperties.getRefresh(), ChronoUnit.DAYS);
         return Jwts.builder()
                 .subject(username)
                 .claims(claims)
-                .expiration(validity)
+                .expiration(Date.from(validity))
                 .signWith(key)
                 .compact();
     }

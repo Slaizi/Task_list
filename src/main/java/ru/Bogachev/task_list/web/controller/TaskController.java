@@ -7,9 +7,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.Bogachev.task_list.domain.task.Task;
+import ru.Bogachev.task_list.domain.task.TaskImage;
 import ru.Bogachev.task_list.service.TaskService;
 import ru.Bogachev.task_list.web.dto.task.TaskDto;
+import ru.Bogachev.task_list.web.dto.task.TaskImageDto;
 import ru.Bogachev.task_list.web.dto.validation.OnUpdate;
+import ru.Bogachev.task_list.web.mappers.TaskImageMapper;
 import ru.Bogachev.task_list.web.mappers.TaskMapper;
 
 @RestController
@@ -20,6 +23,7 @@ import ru.Bogachev.task_list.web.mappers.TaskMapper;
 public class TaskController {
     private final TaskService taskService;
     private final TaskMapper taskMapper;
+    private final TaskImageMapper taskImageMapper;
 
     @GetMapping("/{id}")
     @Operation(summary = "Get TaskDto by id")
@@ -31,7 +35,7 @@ public class TaskController {
 
     @PutMapping
     @Operation(summary = "Update task")
-    @PreAuthorize("@customSecurityExpression.canAccessTask(#id)")
+    @PreAuthorize("@customSecurityExpression.canAccessTask(#dto.id)")
     public TaskDto update (@Validated(OnUpdate.class) @RequestBody TaskDto dto) {
         Task task = taskMapper.toEntity(dto);
         Task updatedTask = taskService.update(task);
@@ -43,5 +47,15 @@ public class TaskController {
     @PreAuthorize("@customSecurityExpression.canAccessTask(#id)")
     public void deleteById (@PathVariable Long id) {
         taskService.delete(id);
+    }
+
+    @PostMapping("/{id}/image")
+    @Operation(summary = "Upload image to task.")
+    @PreAuthorize("@customSecurityExpression.canAccessTask(#id)")
+    public void uploadImage (@PathVariable Long id,
+                             @Validated @ModelAttribute TaskImageDto taskImageDto) {
+        TaskImage image = taskImageMapper.toEntity(taskImageDto);
+        taskService.uploadImage(id, image);
+
     }
 }

@@ -24,10 +24,17 @@ CREATE TABLE if not exists users_tasks
   constraint fk_users_tasks_tasks foreign KEY(task_id) references TASKS(id) on delete cascade on update no action
 );
 
-CREATE TABLE if not exists user_roles
+CREATE TABLE if not exists users_roles
 (
   user_id bigint not null,
   role VARCHAR(255) not null,
   primary KEY(user_id, role),
   constraint fk_users_roles_users foreign KEY(user_id) references USERS(id) on delete cascade on update no action
-)
+);
+
+CREATE TABLE if not exists tasks_images
+(
+  task_id bigint not null,
+  image VARCHAR(255) not null,
+  constraint fk_tasks_images_tasks foreign KEY(task_id) references TASKS(id) on delete cascade on update no action
+);

@@ -14,7 +14,7 @@ values (1, 2),
        (3, 2),
        (4, 1);
 
-insert into user_roles (user_id, role)
+insert into users_roles (user_id, role)
 values (1, 'ROLE_ADMIN'),
        (1, 'ROLE_USER'),
        (2, 'ROLE_USER');

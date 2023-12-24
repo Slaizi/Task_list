@@ -1,17 +1,19 @@
 spring:
   config:
     import: optional:file:.env[.properties]
-
+  cache:
+    type: redis
+    cache-names: redis-cache
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+      password: ${REDIS_PASSWORD}
   datasource:
-    url: jdbc:postgresql://localhost:${HOST}/${DATABASE_NAME}?currentSchema=${DATABASE_SCHEMA}
+    url: jdbc:postgresql://${HOST}:5432/${DATABASE_NAME}?currentSchema=${DATABASE_SCHEMA}
     username: ${POSTGRES_USERNAME}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  sql:
-    init:
-      mode: never
-      continue-on-error: false
-#      data-location: classpath:demo_data.sql
   liquibase:
     change-log: classpath:liquibase/db.changelog.yaml
     enabled: true
@@ -23,3 +25,9 @@ security:
     refresh: ${JWT_REFRESH}
 springdoc:
   override-with-generic-response: false
+
+minio:
+  bucket: ${MINIO_BUCKET}
+  url: ${MINIO_URL}
+  accessKey: ${MINIO_ACCESS_KEY}
+  secretKey: ${MINIO_SECRET_KEY}

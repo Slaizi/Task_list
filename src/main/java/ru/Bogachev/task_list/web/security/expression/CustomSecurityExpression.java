@@ -31,11 +31,6 @@ public class CustomSecurityExpression {
         }
         return false;
     }
-    public boolean canAccessUserForTasks (Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        JwtEntity user = (JwtEntity) authentication.getPrincipal();
-        return user.getId().equals(id);
-    }
     public boolean canAccessTask (Long taskId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         JwtEntity user = (JwtEntity) authentication.getPrincipal();
