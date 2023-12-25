@@ -1,6 +1,9 @@
 package ru.Bogachev.task_list.service.impl;
 
-import io.minio.*;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
@@ -10,7 +13,7 @@ import ru.Bogachev.task_list.domain.task.TaskImage;
 import ru.Bogachev.task_list.service.ImageService;
 import ru.Bogachev.task_list.service.props.MinioProperties;
 
-import java.io.*;
+import java.io.InputStream;
 import java.util.UUID;
 
 @Service
@@ -20,11 +23,13 @@ public class ImageServiceImpl implements ImageService {
     private final MinioProperties minioProperties;
 
     @Override
-    public String upload(TaskImage image) {
+    public String upload(final TaskImage image) {
         try {
             createBucket();
         } catch (Exception e) {
-            throw new ImageUploadException("Image upload failed. " + e.getMessage());
+            throw new ImageUploadException(
+                    "Image upload failed. " + e.getMessage()
+            );
         }
         MultipartFile file = image.getFile();
         if (file.isEmpty() || file.getOriginalFilename() == null) {
@@ -36,18 +41,20 @@ public class ImageServiceImpl implements ImageService {
         try {
             inputStream = file.getInputStream();
         } catch (Exception e) {
-            throw new ImageUploadException("Image upload failed. " + e.getMessage());
+            throw new ImageUploadException(
+                    "Image upload failed. " + e.getMessage()
+            );
         }
         saveImage(inputStream, fileName);
         return fileName;
     }
 
-    private String generateFileName(MultipartFile file) {
+    private String generateFileName(final MultipartFile file) {
         String extension = getExtension(file);
         return UUID.randomUUID() + "." + extension;
     }
 
-    private String getExtension(MultipartFile file) {
+    private String getExtension(final MultipartFile file) {
         return file.getOriginalFilename()
                 .substring(file.getOriginalFilename().lastIndexOf(".") + 1);
     }
@@ -65,7 +72,9 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @SneakyThrows
-    private void saveImage(InputStream inputStream, String fileName) {
+    private void saveImage(final InputStream inputStream,
+                           final String fileName
+    ) {
         minioClient.putObject(PutObjectArgs.builder()
                 .bucket(minioProperties.getBucket())
                 .object(fileName)
