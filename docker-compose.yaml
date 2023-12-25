@@ -25,6 +25,10 @@ services:
       - redis
     env_file:
       - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:${PORT}/${DATABASE_NAME}?currentSchema=${DATABASE_SCHEMA}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - '8080:8080'
 

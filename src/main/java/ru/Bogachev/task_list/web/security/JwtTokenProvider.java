@@ -22,7 +22,11 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,10 +40,19 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
+        this.key = Keys
+                .hmacShaKeyFor(
+                        jwtProperties
+                                .getSecret()
+                                .getBytes()
+                );
     }
 
-    public String createAccessToken (Long userId, String username, Set<Role> roles) {
+    public String createAccessToken(
+            final Long userId,
+            final String username,
+            final Set<Role> roles
+    ) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userId);
         claims.put("roles", resolveRoles(roles));
@@ -53,17 +66,23 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    private List<String> resolveRoles (Set<Role> roles) {
+    private List<String> resolveRoles(final Set<Role> roles) {
         return roles.stream()
                 .map(Enum::name)
                 .collect(Collectors.toList());
     }
 
-    public String createRefreshToken (Long userId, String username) {
+    public String createRefreshToken(
+            final Long userId,
+            final String username
+    ) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userId);
         Instant validity = Instant.now()
-                .plus(jwtProperties.getRefresh(), ChronoUnit.DAYS);
+                .plus(
+                        jwtProperties.getRefresh(),
+                        ChronoUnit.DAYS
+                );
         return Jwts.builder()
                 .subject(username)
                 .claims(claims)
@@ -72,29 +91,39 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public JwtResponse refreshUserTokens (String refreshToken) {
+    public JwtResponse refreshUserTokens(final String refreshToken) {
         JwtResponse jwtResponse = new JwtResponse();
-        if(!validateToken(refreshToken)) {
+        if (!validateToken(refreshToken)) {
             throw new AccessDeniedException();
         }
         Long userId = Long.valueOf(getId(refreshToken));
         User user = userService.getById(userId);
         jwtResponse.setId(userId);
         jwtResponse.setUsername(user.getUsername());
-        jwtResponse.setAccessToken(createAccessToken(userId, user.getUsername(), user.getRoles()));
-        jwtResponse.setRefreshToken(createRefreshToken(userId, user.getUsername()));
+        jwtResponse.setAccessToken(
+                createAccessToken(
+                        userId, user.getUsername(),
+                        user.getRoles()
+                )
+        );
+        jwtResponse.setRefreshToken(
+                createRefreshToken(
+                        userId,
+                        user.getUsername()
+                )
+        );
         return jwtResponse;
     }
 
-    public boolean validateToken(String token) {
-        Jws<Claims> claims = Jwts                   .parser()
-                    .verifyWith((SecretKey) key)
-                    .build()
-                    .parseSignedClaims(token);
+    public boolean validateToken(final String token) {
+        Jws<Claims> claims = Jwts.parser()
+                .verifyWith((SecretKey) key)
+                .build()
+                .parseSignedClaims(token);
         return !claims.getPayload().getExpiration().before(new Date());
     }
 
-    private String getId (String token) {
+    private String getId(final String token) {
         return Jwts
                 .parser()
                 .verifyWith((SecretKey) key)
@@ -104,7 +133,8 @@ public class JwtTokenProvider {
                 .get("id")
                 .toString();
     }
-    private String getUsername (String token) {
+
+    private String getUsername(final String token) {
         return Jwts
                 .parser()
                 .verifyWith((SecretKey) key)
@@ -114,9 +144,14 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
-    public Authentication getAuthentication (String token) {
+    public Authentication getAuthentication(final String token) {
         String username = getUsername(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        UserDetails userDetails = userDetailsService
+                .loadUserByUsername(username);
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                "",
+                userDetails.getAuthorities()
+        );
     }
 }
