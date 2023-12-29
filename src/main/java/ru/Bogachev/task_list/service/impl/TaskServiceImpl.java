@@ -10,11 +10,9 @@ import ru.Bogachev.task_list.domain.exception.ResourceNotFoundException;
 import ru.Bogachev.task_list.domain.task.Status;
 import ru.Bogachev.task_list.domain.task.Task;
 import ru.Bogachev.task_list.domain.task.TaskImage;
-import ru.Bogachev.task_list.domain.user.User;
 import ru.Bogachev.task_list.repository.TaskRepository;
 import ru.Bogachev.task_list.service.ImageService;
 import ru.Bogachev.task_list.service.TaskService;
-import ru.Bogachev.task_list.service.UserService;
 
 import java.util.List;
 
@@ -23,7 +21,6 @@ import java.util.List;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
-    private final UserService userService;
     private final ImageService imageService;
 
     @Override
@@ -32,9 +29,7 @@ public class TaskServiceImpl implements TaskService {
     public Task getById(final Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Task no found.")
-                );
+                        new ResourceNotFoundException("Task not found."));
     }
 
     @Override
@@ -56,12 +51,15 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    @Cacheable(value = "TaskService::getById", key = "#task.id")
+    @Cacheable(value = "TaskService::getById",
+            condition = "#task.id!=null",
+            key = "#task.id")
     public Task create(final Task task, final Long userId) {
-        User user = userService.getById(userId);
-        task.setStatus(Status.TODO);
-        user.getTasks().add(task);
-        userService.update(user);
+        if (task.getStatus() != null) {
+            task.setStatus(Status.TODO);
+        }
+        taskRepository.save(task);
+        taskRepository.assignTask(userId, task.getId());
         return task;
     }
 
@@ -75,11 +73,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     @CacheEvict(value = "TaskService::getById", key = "#id")
-    public void uploadImage(final Long id, final TaskImage image) {
-        Task task = getById(id);
+    public void uploadImage(final Long taskId, final TaskImage image) {
         String fileName = imageService.upload(image);
-        task.getImages().add(fileName);
-        taskRepository.save(task);
+        taskRepository.addImage(taskId, fileName);
     }
 
 }

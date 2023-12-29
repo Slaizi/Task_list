@@ -1,6 +1,7 @@
 package ru.Bogachev.task_list.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.Bogachev.task_list.domain.task.Task;
@@ -15,4 +16,17 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             """, nativeQuery = true)
     List<Task> findAllByUserId(@Param("userId") Long userId);
 
+    @Modifying
+    @Query(value = """
+            INSERT INTO users_tasks (user_id, task_id)
+            VALUES (:userId, :taskId)
+            """, nativeQuery = true)
+    void assignTask(@Param("userId") Long userId, @Param("taskId") Long taskId);
+
+    @Modifying
+    @Query(value = """
+            INSERT INTO tasks_images (task_id, image)
+            VALUES (:id, :fileName)
+            """, nativeQuery = true)
+    void addImage(@Param("id") Long id, @Param("fileName") String fileName);
 }
