@@ -14,8 +14,7 @@ volumes:
 
 services:
   app:
-    build:
-      context: .
+    image: slaizi/tasklist
     container_name: tasklist
     networks:
       - app-network
